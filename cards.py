@@ -16,19 +16,8 @@
     5 ： 1张
 '''
 from error_types import GameError
+from define import *
 
-RED = 1
-YELLOW = 2
-BLUE = 3
-GREEN = 4
-WHITE = 5
-COLORFUL = 6
-
-ONE = 1
-TWO = 2
-THREE = 3
-FOUR = 4
-FIVE = 5
 
 
 class CardInHand():
@@ -37,16 +26,16 @@ class CardInHand():
     '''
 
 
-    def __init__(self, game_type='normal'):
+    def __init__(self, game_type=NORMAL_GAME):
         self.game_type = game_type
         self.unknow = True
         self.color_known = False
         self.num_known = False
-        if game_type == 'normal':
+        if game_type == NORMAL_GAME:
             self.colors = {
                 RED, YELLOW, BLUE, GREEN, WHITE
             }
-        elif game_type == "colorful":
+        elif game_type == COLORFUL_GAME:
             self.colors = {
                 RED, YELLOW, BLUE, GREEN, WHITE, COLORFUL
             }
@@ -58,9 +47,9 @@ class CardInHand():
         }
 
     def check_color(self, color):
-        if self.game_type == 'normal':
+        if self.game_type == NORMAL_GAME:
             colors_include = {RED, YELLOW, BLUE, GREEN, WHITE}
-        elif self.game_type == "colorful":
+        elif self.game_type == COLORFUL_GAME:
             colors_include = {RED, YELLOW, BLUE, GREEN, WHITE, COLORFUL}
         else:
             ge = GameError(code=GameError.GAME_TYPE_ERROR)

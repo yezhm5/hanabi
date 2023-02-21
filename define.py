@@ -1,0 +1,22 @@
+
+
+NORMAL_GAME = "normal"
+COLORFUL_GAME = "colorful"
+
+
+RED = 1
+YELLOW = 2
+BLUE = 3
+GREEN = 4
+WHITE = 5
+COLORFUL = 6
+
+ONE = 1
+TWO = 2
+THREE = 3
+FOUR = 4
+FIVE = 5
+
+
+STARTHANDCARDNUM = 5
+
