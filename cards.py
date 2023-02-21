@@ -17,19 +17,25 @@
 '''
 from error_types import GameError
 
-class card():
-    RED = 1
-    YELLOW = 2
-    BLUE = 3
-    GREEN = 4
-    WHITE = 5
-    COLORFUL = 6
+RED = 1
+YELLOW = 2
+BLUE = 3
+GREEN = 4
+WHITE = 5
+COLORFUL = 6
 
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
-    FIVE = 5
+ONE = 1
+TWO = 2
+THREE = 3
+FOUR = 4
+FIVE = 5
+
+
+class CardInHand():
+    '''
+    表示玩家自己手上的反面表示的卡
+    '''
+
 
     def __init__(self, game_type='normal'):
         self.game_type = game_type
@@ -38,24 +44,24 @@ class card():
         self.num_known = False
         if game_type == 'normal':
             self.colors = {
-                self.RED, self.YELLOW, self.BLUE, self.GREEN, self.WHITE
+                RED, YELLOW, BLUE, GREEN, WHITE
             }
         elif game_type == "colorful":
             self.colors = {
-                self.RED, self.YELLOW, self.BLUE, self.GREEN, self.WHITE, self.COLORFUL
+                RED, YELLOW, BLUE, GREEN, WHITE, COLORFUL
             }
         else:
             ge = GameError(code=GameError.GAME_TYPE_ERROR)
             raise ge
         self.nums = {
-            self.ONE, self.TWO, self.THREE, self.FOUR, self.FIVE
+            ONE, TWO, THREE, FOUR, FIVE
         }
 
     def check_color(self, color):
         if self.game_type == 'normal':
-            colors_include = {self.RED, self.YELLOW, self.BLUE, self.GREEN, self.WHITE}
+            colors_include = {RED, YELLOW, BLUE, GREEN, WHITE}
         elif self.game_type == "colorful":
-            colors_include = {self.RED, self.YELLOW, self.BLUE, self.GREEN, self.WHITE, self.COLORFUL}
+            colors_include = {RED, YELLOW, BLUE, GREEN, WHITE, COLORFUL}
         else:
             ge = GameError(code=GameError.GAME_TYPE_ERROR)
             raise ge
@@ -65,7 +71,7 @@ class card():
             raise ge
 
     def check_num(self, num):
-        if num not in {self.ONE, self.TWO, self.THREE, self.FOUR, self.FIVE}:
+        if num not in {ONE, TWO, THREE, FOUR, FIVE}:
             ge = GameError(code=GameError.CARD_NUM_ERROR)
             raise ge
 
@@ -95,6 +101,13 @@ class card():
         if len(self.nums) == 1:
             self.num_known = True
     
+
+
+class Card():
+    def __init__(self, color, num):
+        self.color = color
+        self.num = num
+
 
 
 
