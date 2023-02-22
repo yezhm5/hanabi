@@ -47,14 +47,16 @@ class CardInHand():
         }
 
     def check_color(self, color):
-        if self.game_type == NORMAL_GAME:
-            colors_include = {RED, YELLOW, BLUE, GREEN, WHITE}
-        elif self.game_type == COLORFUL_GAME:
-            colors_include = {RED, YELLOW, BLUE, GREEN, WHITE, COLORFUL}
-        else:
+        # if self.game_type == NORMAL_GAME:
+        #     colors_include = {RED, YELLOW, BLUE, GREEN, WHITE}
+        # elif self.game_type == COLORFUL_GAME:
+        #     colors_include = {RED, YELLOW, BLUE, GREEN, WHITE, COLORFUL}
+        if self.game_type not in [NORMAL_GAME, COLORFUL_GAME]:
             ge = GameError(code=GameError.GAME_TYPE_ERROR)
             raise ge
 
+        # 可叫颜色不包含彩色
+        colors_include = {RED, YELLOW, BLUE, GREEN, WHITE}
         if color not in colors_include:
             ge = GameError(code=GameError.CARD_COLOR_ERROR)
             raise ge
@@ -69,6 +71,7 @@ class CardInHand():
         self.unknow = False
         self.color_known = True
         self.colors = {color}
+
 
     def set_num(self, num):
         self.check_num(num)

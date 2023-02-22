@@ -160,7 +160,7 @@ class Game():
         pass
 
 
-    # 四种操作：颜色提示，数字提示，弃牌，打牌
+    # 四种操作：颜色提示，数字提示，弃牌，打牌 ------------------------------------
     def color_tips(self, playerid, relpos, color):
         '''
         指示一位玩家一种颜色
@@ -177,9 +177,10 @@ class Game():
         rel_player = self.curplayer
         for i in range(relpos):
             rel_player = rel_player.next_player
+        rel_player.color_tips(color)
 
 
-    def num_tips(self, playerid, relpos, color):
+    def num_tips(self, playerid, relpos, num):
         '''
         指示一位玩家一种数字
         :param playerid:
@@ -187,7 +188,14 @@ class Game():
         :param color:
         :return:
         '''
-        pass
+        self.check_curplayer(playerid)
+        self.check_relpos(relpos)
+        self.check_num(num)
+        rel_player = self.curplayer
+        for i in range(relpos):
+            rel_player = rel_player.next_player
+        rel_player.num_tips(num)
+
 
     def drop_card(self, playerid, card_relpos):
         '''
@@ -204,6 +212,26 @@ class Game():
         :param card_relpos:
         :return:
         '''
+
+
+    # ----------------------------------------------------
+
+    # 信息展示相关 -----------------------------------------
+    def get_scores(self):
+        pass
+
+    def get_openinfo(self):
+        pass
+
+    def get_players_cards(self):
+        pass
+
+    def get_handcards(self):
+        pass
+
+
+    def get_all_info(self):
+        pass
 
 
 
