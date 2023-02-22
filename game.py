@@ -19,6 +19,12 @@ class Player():
         self.real_cards.append(card)
         self.hand_cards.append(CardInHand(game_type=game_type))
 
+    def dis_card(self, card_relpos):
+        if card_relpos >= len(self.hand_cards) or card_relpos < 0:
+            raise GameError(code=GameError.CARD_POS_ERROR)
+        self.hand_cards.pop(card_relpos)
+        return self.real_cards.pop(card_relpos)
+
     def color_tips(self, color):
         for hand_card, real_card in zip(self.hand_cards, self.real_cards):
             if real_card.color==color:
@@ -51,9 +57,10 @@ class Game():
         self.players = {playerid:Player() for playerid in self.playerids}
         for i in range(player_num):
             playerid = self.playerids[i]
-            self.players[playerid].set_next_player(self.players[playerid%player_num])
+            playerid_next = self.playerids[(i+1)%player_num]
+            self.players[playerid].set_next_player(self.players[playerid_next])
         # 当前操作玩家
-        self.curplayer = self.players[0]
+        self.curplayer = self.players[self.playerids[0]]
 
         self.check_game_type(game_type)
         self.game_type = game_type
@@ -64,6 +71,7 @@ class Game():
 
         self.lastround = False  # 是否进入最后一轮
         self.lr_trigger = None  # 触发最后一轮的玩家
+        self.end = False
 
         self.undrawcards = []   # 未抽牌堆
         self.dropcardgroup = [] # 弃牌堆
@@ -106,8 +114,9 @@ class Game():
         random.shuffle(undrawcards)
         self.undrawcards = undrawcards
 
-    def __deal_cards(self, player):
-        player.draw_card(self.undrawcards.pop(0), self.game_type)
+    def __draw_card(self, player):
+        if len(self.undrawcards) > 0:
+            player.draw_card(self.undrawcards.pop(0), self.game_type)
 
     def create_game(self):
         # 初始化卡组
@@ -117,7 +126,72 @@ class Game():
         for i in range(STARTHANDCARDNUM):
             for playerid in self.playerids:
                 player = self.players[playerid]
-                self.__deal_cards(player)
+                self.__draw_card(player)
+
+    def tiptime_add(self):
+        if self.tiptime_leave < self.tiptime:
+            self.tiptime_leave += 1
+
+    def next_player(self):
+        self.curplayer = self.curplayer.next_player
+
+    def end_unable(fn):
+        def wrapTheFunction(self, *args, **kwargs):
+            if self.end == True:
+                raise GameError(code=GameError.GAME_END_ALRDY)
+            fn(self, *args, **kwargs)
+        return wrapTheFunction
+
+
+    def end_turn_op(self):
+        '''
+        1. 检测是否进入最后一轮
+        2. 检测是否结束游戏
+        3. 轮到下家操作
+        :return:
+        '''
+        self.check_end_round()
+        self.check_end()
+        self.next_player()
+
+
+    def check_end_round(self):
+        if self.lastround == False and len(self.undrawcards) == 0:
+            self.lastround = True
+            self.lr_trigger = self.curplayer
+
+    def check_hanabi(self, card):
+        # 检查放的花火是否合格
+        hanabiqueue_dict = {
+            WHITE: self.writequeue,
+            RED: self.redqueue,
+            YELLOW: self.yellowqueue,
+            BLUE: self.bluequeue,
+            GREEN: self.greenqueue,
+            COLORFUL: self.colorfulqueue,
+        }
+        num_queue = [ONE, TWO, THREE, FOUR, FIVE]
+
+        color = card.color
+        num = card.num
+
+        card_queue = hanabiqueue_dict[color]
+        card_queue.append(card)
+        num_queue_tmp = [card.num for card in card_queue]
+
+        correct = True
+        for num_real, num_right in zip(num_queue_tmp, num_queue):
+            if num_real != num_right:
+                correct = False
+                break
+        if correct == True:
+            pass
+        else:
+            card = card_queue.pop()
+            self.tortime_leave -= 1
+            self.dropcardgroup.append(card)
+
+
 
 
     def check_curplayer(self, playerid):
@@ -146,6 +220,11 @@ class Game():
         if relpos < 1 or relpos > self.player_num - 1:
             raise GameError(code=GameError.PLAYER_NOT_EXISTS)
 
+    def check_tiptime(self):
+        if self.tiptime_leave <= 0:
+            raise GameError(code=GameError.TIPTIME_NOT_ENOUGH)
+
+
     def check_end(self):
         '''
         检测是否游戏结束
@@ -156,11 +235,9 @@ class Game():
         '''
         pass
 
-    def get_player_infomation(self, playerid):
-        pass
-
 
     # 四种操作：颜色提示，数字提示，弃牌，打牌 ------------------------------------
+    @end_unable
     def color_tips(self, playerid, relpos, color):
         '''
         指示一位玩家一种颜色
@@ -173,13 +250,19 @@ class Game():
         self.check_curplayer(playerid)
         self.check_relpos(relpos)
         self.check_color(color)
+        self.check_tiptime()
 
         rel_player = self.curplayer
         for i in range(relpos):
             rel_player = rel_player.next_player
         rel_player.color_tips(color)
+        self.tiptime_leave -= 1
 
 
+        # 回合结束操作
+        self.end_turn_op()
+
+    @end_unable
     def num_tips(self, playerid, relpos, num):
         '''
         指示一位玩家一种数字
@@ -191,12 +274,19 @@ class Game():
         self.check_curplayer(playerid)
         self.check_relpos(relpos)
         self.check_num(num)
+        self.check_tiptime()
+
         rel_player = self.curplayer
         for i in range(relpos):
             rel_player = rel_player.next_player
         rel_player.num_tips(num)
+        self.tiptime_leave -= 1
+
+        # 回合结束操作
+        self.end_turn_op()
 
 
+    @end_unable
     def drop_card(self, playerid, card_relpos):
         '''
         弃掉一张牌，拿到一个提示点，提示点上限不能超
@@ -204,7 +294,20 @@ class Game():
         :param card_relpos:
         :return:
         '''
+        self.check_curplayer(playerid)
+        # 丢弃卡牌到弃牌堆
+        card = self.curplayer.dis_card(card_relpos)
+        self.dropcardgroup.append(card)
 
+        # 抽卡
+        self.__draw_card(self.curplayer)
+        # 提示次数增加
+        self.tiptime_add()
+
+        # 回合结束操作
+        self.end_turn_op()
+
+    @end_unable
     def dis_card(self, playerid, card_relpos):
         '''
         打出一张牌，检查牌是否符合打出条件，若符合，则打出
@@ -212,7 +315,12 @@ class Game():
         :param card_relpos:
         :return:
         '''
+        self.check_curplayer(playerid)
+        # 打出牌
+        card = self.curplayer.dis_card(card_relpos)
+        self.check_hanabi(card)
 
+        self.end_turn_op()
 
     # ----------------------------------------------------
 
@@ -229,9 +337,13 @@ class Game():
     def get_handcards(self):
         pass
 
-
-    def get_all_info(self):
+    def get_player_infomation(self, playerid):
         pass
 
 
 
+if __name__ == '__main__':
+    game = Game(3, NORMAL_GAME)
+    # game.end = True
+    player_id = game.playerids[0]
+    game.drop_card(player_id, 0)
