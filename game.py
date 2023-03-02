@@ -39,6 +39,19 @@ class Player():
             else:
                 hand_card.remove_num(num)
 
+    def show_hand_cards(self):
+        hand_card_list = []
+        for hand_card in self.hand_cards:
+            hand_card_list.append(hand_card.show_card())
+        return hand_card_list
+
+    def show_real_cards(self):
+        real_card_list = []
+        for real_card in self.real_cards:
+            real_card_list.append(real_card.show_card())
+        return real_card_list
+
+
 class Game():
     '''
     游戏相关函数
@@ -51,6 +64,7 @@ class Game():
         :param tortime: 错误容忍次数
         :param tiptime: 起始提示次数
         '''
+        self.game_id = str(uuid.uuid1())
         # 设定随机uuid，作为请求时的用户id标识
         self.player_num = player_num
         self.playerids = [str(uuid.uuid1()) for i in range(player_num)]
@@ -84,7 +98,26 @@ class Game():
         self.greenqueue = []    # 蓝色花火队列
         self.colorfulqueue = []    # 绿色花火队列
 
-
+    def get_queues_dict(self):
+        if self.game_type == NORMAL_GAME:
+            # 检查放的花火是否合格
+            hanabiqueue_dict = {
+                WHITE: self.writequeue,
+                RED: self.redqueue,
+                YELLOW: self.yellowqueue,
+                BLUE: self.bluequeue,
+                GREEN: self.greenqueue
+            }
+        else:
+            hanabiqueue_dict = {
+                WHITE: self.writequeue,
+                RED: self.redqueue,
+                YELLOW: self.yellowqueue,
+                BLUE: self.bluequeue,
+                GREEN: self.greenqueue,
+                COLORFUL: self.colorfulqueue,
+            }
+        return hanabiqueue_dict
 
     def check_game_type(self, game_type):
         if game_type not in [NORMAL_GAME, COLORFUL_GAME]:
@@ -127,6 +160,8 @@ class Game():
             for playerid in self.playerids:
                 player = self.players[playerid]
                 self.__draw_card(player)
+
+        self.curplayer = self.players[self.playerids[0]]
 
     def tiptime_add(self):
         if self.tiptime_leave < self.tiptime:
@@ -176,17 +211,15 @@ class Game():
         num = card.num
 
         card_queue = hanabiqueue_dict[color]
-        card_queue.append(card)
-        num_queue_tmp = [card.num for card in card_queue]
-
         correct = True
-        for num_real, num_right in zip(num_queue_tmp, num_queue):
-            if num_real != num_right:
-                correct = False
-                break
-        if correct == True:
-            pass
+        if num_queue[len(card_queue)] == num:
+            correct = True
         else:
+            correct = False
+
+        if correct == True: # 正确是加入列表
+            card_queue.append(card)
+        else:   # 错误时，剩余错误数减一，并把牌丢入弃牌堆
             card = card_queue.pop()
             self.tortime_leave -= 1
             self.dropcardgroup.append(card)
@@ -233,7 +266,31 @@ class Game():
         3.最后一张牌抽走后，所有人在轮流进行最后一回合
         :return:
         '''
-        pass
+        if self.tortime_leave == 0:
+            self.end = True
+            return
+
+
+        finish_status = True
+
+        queuelist = self.get_queues_dict()
+        for hanabiqueue in queuelist:
+            if hanabiqueue == [ONE, TWO, THREE, FOUR, FIVE]:
+                pass
+            else:
+                finish_status = False
+                break
+        if finish_status == True:
+            self.end = True
+            return
+
+
+        # 最终轮结束
+        if id(self.lr_trigger) == id(self.curplayer):
+            self.end = True
+            return
+
+
 
 
     # 四种操作：颜色提示，数字提示，弃牌，打牌 ------------------------------------
@@ -258,7 +315,7 @@ class Game():
         rel_player.color_tips(color)
         self.tiptime_leave -= 1
 
-
+        self.check_end()
         # 回合结束操作
         self.end_turn_op()
 
@@ -282,6 +339,7 @@ class Game():
         rel_player.num_tips(num)
         self.tiptime_leave -= 1
 
+        self.check_end()
         # 回合结束操作
         self.end_turn_op()
 
@@ -304,6 +362,7 @@ class Game():
         # 提示次数增加
         self.tiptime_add()
 
+        self.check_end()
         # 回合结束操作
         self.end_turn_op()
 
@@ -320,30 +379,112 @@ class Game():
         card = self.curplayer.dis_card(card_relpos)
         self.check_hanabi(card)
 
+
+        self.check_end()
         self.end_turn_op()
 
     # ----------------------------------------------------
 
     # 信息展示相关 -----------------------------------------
-    def get_scores(self):
-        pass
+    def get_score(self):
+        hanabiqueue_dict = self.get_queues_dict()
+        score = 0
+        for key, value in hanabiqueue_dict.items():
+            score += len(value)
+        return score
 
     def get_openinfo(self):
-        pass
+        '''
+        返回剩余提示次数，剩余失败次数，剩余卡数，弃牌堆，花火堆
+        :return:
+        '''
+        tiptime_leave = self.tiptime_leave
+        tortime_leave = self.tortime_leave
+        undrawcards_num = len(self.undrawcards)
 
-    def get_players_cards(self):
-        pass
+        dropcardgroup_list = []
+        for dropcard in self.dropcardgroup:
+            dropcardgroup_list.append(dropcard.show_card())
 
-    def get_handcards(self):
-        pass
+        hanabigroup = {
+            WHITE: self.writequeue,
+            RED: self.redqueue,
+            YELLOW: self.yellowqueue,
+            BLUE: self.bluequeue,
+            GREEN: self.greenqueue
+        }
+        if self.game_type == COLORFUL_GAME:
+            hanabigroup[COLORFUL] = self.colorfulqueue
+
+        return tiptime_leave, tortime_leave, undrawcards_num, dropcardgroup_list, hanabigroup
+
+
+    def get_players_cards(self, playerid):
+        '''
+        按相对位置获取其他玩家真实卡牌，和该玩家在自己视角看到的自己牌
+        :return:
+        '''
+        player = self.players[playerid]
+        players_real_cards = []
+        players_hand_cards = []
+        for i in range(self.player_num - 1):
+            player_real_cards = player.show_real_cards()
+            players_real_cards.append(player_real_cards)
+            player_hand_cards = player.show_hand_cards()
+            players_hand_cards.append(player_hand_cards)
+        return players_real_cards, players_hand_cards
+
+    def get_handcards(self, playerid):
+        '''
+        获取自己手卡
+        :return:
+        '''
+        player = self.players[playerid]
+        return player.show_hand_cards()
 
     def get_player_infomation(self, playerid):
-        pass
+        '''
+        调用上面4个方法，即为玩家可获取的信息
+        :param playerid:
+        :return:
+        '''
+        score = self.get_score()
+        tiptime_leave, tortime_leave, undrawcards_num, dropcardgroup_list, hanabigroup = self.get_openinfo()
+        players_real_cards, players_hand_cards = self.get_players_cards(playerid)
+        handcards = self.get_handcards(playerid)
+        return {
+            "open_info":{
+                "score": score,
+                "tiptime_leave": tiptime_leave,
+                "tortime_leave": tortime_leave,
+                "undrawcards_num": undrawcards_num,
+                "dropcardgroup_list": dropcardgroup_list,
+                "hanabigroup": hanabigroup
+            },
+            "personal_info":{
+                "players_real_cards": players_real_cards,
+                "players_hand_cards": players_hand_cards,
+                "my_hand_cards": handcards
+            }
+        }
 
 
 
 if __name__ == '__main__':
-    game = Game(3, NORMAL_GAME)
-    # game.end = True
-    player_id = game.playerids[0]
-    game.drop_card(player_id, 0)
+    g0 = Game(3)    # 创建游戏房间
+    g0.create_game()    # 开始游戏
+
+    playerids = g0.playerids
+    player0_info = g0.get_player_infomation(playerids[0])   # 玩家获取自己能看到的所有信息
+
+    # 四种出牌方式
+    g0.color_tips(playerids[0], 1, 1)
+    # g0.num_tips(playerids[0], 1, 1)
+    # g0.drop_card(playerids[0], 1)
+    # g0.dis_card(playerids[0], 2)
+
+    player0_info = g0.get_player_infomation(playerids[0])  # 玩家获取自己能看到的所有信息
+
+
+
+

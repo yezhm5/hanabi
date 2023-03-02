@@ -94,12 +94,19 @@ class CardInHand():
             self.num_known = True
     
 
+    def show_card(self):
+        return {
+            "colors": list(self.colors),
+            "nums": list(self.nums)
+        }
+
 
 class Card():
     def __init__(self, color, num):
         self.color = color
         self.num = num
 
-
+    def show_card(self):
+        return {"color": self.color, "num": self.num}
 
 
