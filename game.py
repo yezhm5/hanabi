@@ -379,7 +379,7 @@ class Game():
         # 打出牌
         card = self.curplayer.dis_card(card_relpos)
         self.check_hanabi(card)
-
+        self.__draw_card(self.curplayer)
 
         self.check_end()
         self.end_turn_op()
