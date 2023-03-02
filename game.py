@@ -450,7 +450,22 @@ class Game():
         :param playerid:
         :return:
         '''
-        pass
+        player = self.players[playerids]
+        cards_leave = player.real_cards+self.undrawcards
+        cards_leave_dict = {
+            WHITE: {ONE:0, TWO:0, THREE:0, FOUR:0, FIVE:0},
+            RED: {ONE: 0, TWO: 0, THREE: 0, FOUR: 0, FIVE: 0},
+            YELLOW: {ONE: 0, TWO: 0, THREE: 0, FOUR: 0, FIVE: 0},
+            BLUE: {ONE: 0, TWO: 0, THREE: 0, FOUR: 0, FIVE: 0},
+            GREEN: {ONE: 0, TWO: 0, THREE: 0, FOUR: 0, FIVE: 0},
+        }
+        if self.game_type == COLORFUL_GAME:
+            cards_leave_dict[COLORFUL] = {ONE:0, TWO:0, THREE:0, FOUR:0, FIVE:0}
+        for card in cards_leave:
+            card_info = card.show_card()
+            cards_leave_dict[card_info['color']][card_info['num']] += 1
+        return cards_leave_dict
+
 
     def get_player_infomation(self, playerid):
         '''
@@ -474,7 +489,8 @@ class Game():
             "personal_info":{
                 "players_real_cards": players_real_cards,
                 "players_hand_cards": players_hand_cards,
-                "my_hand_cards": handcards
+                "my_hand_cards": handcards,
+                "cards_leave": self.get_card_type_leave_num(playerid)
             }
         }
 
