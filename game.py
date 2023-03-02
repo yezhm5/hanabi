@@ -217,10 +217,11 @@ class Game():
         else:
             correct = False
 
+        print("打出牌：", card.show_card())
         if correct == True: # 正确是加入列表
             card_queue.append(card)
         else:   # 错误时，剩余错误数减一，并把牌丢入弃牌堆
-            card = card_queue.pop()
+            print("出牌不合法")
             self.tortime_leave -= 1
             self.dropcardgroup.append(card)
 
@@ -428,6 +429,7 @@ class Game():
         players_real_cards = []
         players_hand_cards = []
         for i in range(self.player_num - 1):
+            player = player.next_player
             player_real_cards = player.show_real_cards()
             players_real_cards.append(player_real_cards)
             player_hand_cards = player.show_hand_cards()
