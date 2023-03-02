@@ -407,11 +407,11 @@ class Game():
             dropcardgroup_list.append(dropcard.show_card())
 
         hanabigroup = {
-            WHITE: self.writequeue,
-            RED: self.redqueue,
-            YELLOW: self.yellowqueue,
-            BLUE: self.bluequeue,
-            GREEN: self.greenqueue
+            WHITE: [card.show_card() for card in self.writequeue],
+            RED: [card.show_card() for card in self.redqueue],
+            YELLOW: [card.show_card() for card in self.yellowqueue],
+            BLUE: [card.show_card() for card in self.bluequeue],
+            GREEN: [card.show_card() for card in self.greenqueue]
         }
         if self.game_type == COLORFUL_GAME:
             hanabigroup[COLORFUL] = self.colorfulqueue
