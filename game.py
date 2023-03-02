@@ -444,6 +444,14 @@ class Game():
         player = self.players[playerid]
         return player.show_hand_cards()
 
+    def get_card_type_leave_num(self, playerid):
+        '''
+        获取自己视角下，剩余各种牌的张数（剩余牌堆+自己手牌得出）
+        :param playerid:
+        :return:
+        '''
+        pass
+
     def get_player_infomation(self, playerid):
         '''
         调用上面4个方法，即为玩家可获取的信息

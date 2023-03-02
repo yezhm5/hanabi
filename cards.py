@@ -69,9 +69,11 @@ class CardInHand():
     def set_color(self, color):
         self.check_color(color)
         self.unknow = False
-        self.color_known = True
-        self.colors = {color}
-
+        for color_in in self.colors:
+            if color_in not in {color, COLORFUL}:
+                self.colors.remove(color_in)
+        if len(self.colors) == 1:
+            self.color_known = True
 
     def set_num(self, num):
         self.check_num(num)
@@ -79,10 +81,13 @@ class CardInHand():
         self.num_known = True
         self.nums = {num}
 
+
     def remove_color(self, color):
         self.check_color(color)
         self.unknow = False
         self.colors.remove(color)
+        if self.game_type == COLORFUL_GAME:
+            self.colors.remove(COLORFUL)
         if len(self.colors) == 1:
             self.color_known = True
 
