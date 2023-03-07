@@ -450,7 +450,7 @@ class Game():
         :param playerid:
         :return:
         '''
-        player = self.players[playerids]
+        player = self.players[playerid]
         cards_leave = player.real_cards+self.undrawcards
         cards_leave_dict = {
             WHITE: {ONE:0, TWO:0, THREE:0, FOUR:0, FIVE:0},
@@ -466,6 +466,13 @@ class Game():
             cards_leave_dict[card_info['color']][card_info['num']] += 1
         return cards_leave_dict
 
+    def get_curplayer_relpos(self, playerid):
+        player = self.players[playerid]
+        replos = 0
+        while id(player) != id(self.curplayer):
+            replos += 1
+            player = player.next_player
+        return replos
 
     def get_player_infomation(self, playerid):
         '''
@@ -479,6 +486,7 @@ class Game():
         handcards = self.get_handcards(playerid)
         return {
             "open_info":{
+                "player_num": self.player_num,
                 "score": score,
                 "tiptime_leave": tiptime_leave,
                 "tortime_leave": tortime_leave,
@@ -487,6 +495,7 @@ class Game():
                 "hanabigroup": hanabigroup
             },
             "personal_info":{
+                "curplayer": self.get_curplayer_relpos(playerid),
                 "players_real_cards": players_real_cards,
                 "players_hand_cards": players_hand_cards,
                 "my_hand_cards": handcards,
