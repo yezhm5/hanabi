@@ -1,38 +1,84 @@
-from flask import Flask, request, jsonify
-import room
-from error_types import GameError
-from settings import reponse_status
+# from aiohttp import web
+# import socketio
+#
+# sio = socketio.AsyncServer(async_mode='sanic', cors_allowed_origins='*')
+# app = web.Application()
+# sio.attach(app)
+#
+# room = []
+#
+# async def index(request):
+#     """Serve the client-side application."""
+#     with open('index.html') as f:
+#         return web.Response(text=f.read(), content_type='text/html')
+#
+#
+# @sio.event
+# def connect(sid, environ):
+#     print('connect ', sid)
+#     room.append(sid)
+#
+# @sio.event
+# def my_message(sid, data):
+#     print('message ', data)
+#     for pid in room:
+#         socketio.Server.send(sio, f"房间有{len(room)}个人", skip_sid=pid)
+#         sio.call("my_message", f"有人加入了，房间有{len(room)}个人", sid=pid)
+#
+# @sio.event
+# def disconnect(sid):
+#     print('disconnect ', sid)
+#     room.remove(sid)
+#     for pid in room:
+#         sio.call("my_message", f"有人离开了，房间有{len(room)}个人", sid=pid)
+#
+#
+# # app.router.add_static('/static', 'static')
+# # app.router.add_get('/', index)
+#
+# if __name__ == '__main__':
+#     web.run_app(app)
 
-ROOMS = {}
+
+
+from aiohttp import web
+import socketio
+
+sio = socketio.AsyncServer(cors_allowed_origins='*')    # 跨域
+app = web.Application()
+sio.attach(app)
+
+
+room = []
+
+async def index(request):
+    """Serve the client-side application."""
+    with open('index.html') as f:
+        return web.Response(text=f.read(), content_type='text/html')
 
 
 
+@sio.event
+def connect(sid, environ):
+    print('connect ', sid)
+    room.append(sid)
 
-app = Flask(__name__)
+@sio.event
+async def my_message(sid, data):
+    print('message ', data)
+    for pid in room:
+        await sio.call("message", "一共n人", sid=pid)
 
-@app.route("/create_room/<room_name>", methods = ["POST"])
-def create_room(room_name):
-    try:
-        params = request.get_json()
-        ROOMS[room_name] = room.Room(room_name, params["holder_name"])
-        holderid = ROOMS[room_name].holder
-        return jsonify(
-            {
-                "code": reponse_status.success_status,
-                "holderid": holderid
-            }
-        )
-    except GameError as ge:
-        return jsonify(
-            {
-                "code": ge.code,
-                "msg": ge.msg
-            }
-        )
-    except Exception as e:
-        return jsonify({
-            "code": reponse_status.error_status,
-            "msg": str(e)
-        })
+@sio.event
+def disconnect(sid):
+    print('disconnect ', sid)
+    room.remove(sid)
+    for pid in room:
+        sio.call("my_message", f"有人离开了，房间有{len(room)}个人", sid=pid)
 
+# app.router.add_static('/static', 'static')
+app.router.add_get('/', index)
 
+if __name__ == '__main__':
+    web.run_app(app, port=5000)
+    # web.run_app(app)
