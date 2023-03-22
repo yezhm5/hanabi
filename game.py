@@ -64,6 +64,8 @@ class Game():
         :param tortime: 错误容忍次数
         :param tiptime: 起始提示次数
         '''
+        if player_num < 2 or player_num > 5:
+            raise GameError(code=GameError.PLAYER_NUM_ERROR)
         self.game_id = str(uuid.uuid1())
         # 设定随机uuid，作为请求时的用户id标识
         self.player_num = player_num

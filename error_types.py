@@ -2,6 +2,8 @@ class GameError(Exception):
     GAME_TYPE_ERROR = 400
     CARD_NUM_ERROR = 401
     CARD_COLOR_ERROR = 402
+    PLAYER_NUM_ERROR = 403
+    GAME_START = 404
 
 
     NOT_CUR_PLAYER = 410
@@ -16,6 +18,8 @@ class GameError(Exception):
         GAME_TYPE_ERROR: "不存在该游戏模式".format,
         CARD_NUM_ERROR: "不存在该数字的卡片".format,
         CARD_COLOR_ERROR: "不存在该颜色的卡片".format,
+        PLAYER_NUM_ERROR: "人数不正确，人数必须为2-5人".format(),
+        GAME_START: "游戏已开始".format(),
 
         NOT_CUR_PLAYER: "未轮到你操作".format,
         PLAYER_NOT_EXISTS: "无法指示该玩家".format,
