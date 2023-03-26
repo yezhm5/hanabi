@@ -10,6 +10,7 @@ class GameError(Exception):
     PLAYER_NOT_EXISTS = 411
     CARD_POS_ERROR = 412
     TIPTIME_NOT_ENOUGH = 413
+    DO_TYPE_NOT_EXISTS = 414
 
 
     GAME_END_ALRDY = 420
@@ -25,6 +26,7 @@ class GameError(Exception):
         PLAYER_NOT_EXISTS: "无法指示该玩家".format,
         CARD_POS_ERROR: "不存在该位置的卡牌".format,
         TIPTIME_NOT_ENOUGH: "提示次数不足，不可进行该操作".format,
+        DO_TYPE_NOT_EXISTS: "不存在该操作类型".format,
 
         GAME_END_ALRDY: "游戏已结束，无法进行此操作".format,
     }
@@ -32,3 +34,23 @@ class GameError(Exception):
     def __init__(self, code: int, **kwargs): # real signature unknown
         self.code = code
         self.msg = self.dict_formatter[code](**kwargs)
+
+
+class RoomError(Exception):
+    ROOM_EXISTS = 300
+    ROOM_NOT_EXISTS = 301
+    NOT_HOLDER = 302
+    PLAYERID_NOT_EXISTS = 303
+
+    dict_formatter = {
+        ROOM_EXISTS: "房间名已存在".format,
+        ROOM_NOT_EXISTS: "房间名不存在".format,
+        NOT_HOLDER: "你不是房主，不能进行该操作".format,
+        PLAYERID_NOT_EXISTS: "你输入的玩家id不存在".format
+    }
+
+    def __init__(self, code: int, **kwargs): # real signature unknown
+        self.code = code
+        self.msg = self.dict_formatter[code](**kwargs)
+
+
